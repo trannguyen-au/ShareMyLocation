@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">ShareMyLocation</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="message">clip_board_message</string>
+    <string name="str_my_location_is">My location is %s</string>
+    <string name="title_activity_about">AboutActivity</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+
+</resources>
