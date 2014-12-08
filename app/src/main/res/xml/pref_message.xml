@@ -1,0 +1,35 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <CheckBoxPreference
+        android:key="enable_custom_message"
+        android:title="Enable custom message"
+        android:defaultValue="true" />
+
+    <EditTextPreference
+        android:title="Custom message"
+        android:key="text_custom_message"
+        android:singleLine="false"
+        android:maxLines="3"
+        android:defaultValue="My location is: "
+        android:dependency="enable_custom_message"/>
+
+    <CheckBoxPreference
+        android:key="enable_latlng"
+        android:title="Include latitude longitude"
+        android:defaultValue="true" />
+    <CheckBoxPreference
+        android:key="enable_address"
+        android:title="Include address"
+        android:summary="Estimated address (if found) will be included in the message"
+        android:defaultValue="true" />
+    <CheckBoxPreference
+        android:key="enable_map_link"
+        android:title="Include map link"
+        android:summary="Send google map link which allow others to view your location on Google map"
+        android:defaultValue="true" />
+    <CheckBoxPreference
+        android:key="enable_app_info"
+        android:title="Include app information"
+        android:summary="Share the app with your friends"
+        android:defaultValue="true" />
+</PreferenceScreen>

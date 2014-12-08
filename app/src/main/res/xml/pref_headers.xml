@@ -3,15 +3,11 @@
     <!-- These settings headers are only used on tablets. -->
 
     <header
-        android:fragment="mobile.wnext.sharemylocation.SettingsActivity$GeneralPreferenceFragment"
-        android:title="@string/pref_header_general" />
+        android:fragment="mobile.wnext.sharemylocation.SettingsActivity$MessagePreferenceFragment"
+        android:title="@string/pref_header_message" />
 
     <header
-        android:fragment="mobile.wnext.sharemylocation.SettingsActivity$NotificationPreferenceFragment"
-        android:title="@string/pref_header_notifications" />
-
-    <header
-        android:fragment="mobile.wnext.sharemylocation.SettingsActivity$DataSyncPreferenceFragment"
-        android:title="@string/pref_header_data_sync" />
+        android:fragment="mobile.wnext.sharemylocation.SettingsActivity$InformationPreferenceFragment"
+        android:title="@string/pref_header_information" />
 
 </preference-headers>

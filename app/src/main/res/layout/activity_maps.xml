@@ -41,26 +41,9 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:id="@+id/tvLocation"
-                    android:text="My location is -32.0000, 142000"
+                    android:text="Searching for your location..."
                     android:layout_alignParentTop="true"
                     android:layout_alignParentStart="true" />
-
-                <TextView
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/tvAddress"
-                    android:text="estimated street address" />
-                <TextView
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/tvLocationNearBy"
-                    android:text="Nearby location" />
-                <TextView
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/tvGmapLink"
-                    android:text="https://www.google.com.au/maps/@-37.8222112,145.0328018,15z"/>
-
             </LinearLayout>
         </ScrollView>
     </RelativeLayout>

@@ -6,6 +6,10 @@ import android.location.Address;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
+
 /**
  * Created by Nnguyen on 5/12/2014.
  */
@@ -46,12 +50,15 @@ public class LocationMessage {
     }
 
     public String getAddressLine() {
-        String result = "";
-        for (int i=0;i<address.getMaxAddressLineIndex();i++) {
-            result += address.getAddressLine(i)+", ";
+        if(address!=null) {
+            String result = "";
+            for (int i = 0; i < address.getMaxAddressLineIndex(); i++) {
+                result += address.getAddressLine(i) + ", ";
+            }
+            result = result.substring(0, result.length() - 2);
+            return result;
         }
-        result = result.substring(0,result.length()-2);
-        return result;
+        return "";
     }
 
     public void setAddress(Address address) {
@@ -100,14 +107,20 @@ public class LocationMessage {
 
     public String getLatLngDisplay() {
         return String.format(mResource.getString(R.string.str_my_location_is),
-                String.format("%s,%s", latLng.latitude, latLng.longitude));
+                String.format(DOUBLE_FORMAT+","+DOUBLE_FORMAT,
+                        decimalFormat.format(latLng.latitude),
+                        decimalFormat.format(latLng.longitude)));
     }
 
     public String getMapLinkDisplay() {
-        return String.format("http://maps.google.com/maps?&z=16&q=%s+%s&ll=%s+%s",
-                latLng.latitude, latLng.longitude,
-                latLng.latitude, latLng.longitude);
+        return String.format("http://maps.google.com/maps?&z=16&q="+DOUBLE_FORMAT+"+"+DOUBLE_FORMAT+
+                        "&ll="+DOUBLE_FORMAT+"+"+DOUBLE_FORMAT,
+                decimalFormat.format(latLng.latitude), decimalFormat.format(latLng.longitude),
+                decimalFormat.format(latLng.latitude), decimalFormat.format(latLng.longitude));
     }
 
+    private DecimalFormat decimalFormat = new DecimalFormat("###.######",
+            DecimalFormatSymbols.getInstance(Locale.ENGLISH));
+    private String DOUBLE_FORMAT = "%s";
 
 }

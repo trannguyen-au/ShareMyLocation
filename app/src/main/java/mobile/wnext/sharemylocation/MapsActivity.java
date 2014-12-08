@@ -15,9 +15,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ShareActionProvider;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
@@ -53,14 +51,13 @@ public class MapsActivity extends FragmentActivity implements
     public static final String TAG = "ShareMyLocation";
     public static final String PREF_SELECTED_INTENT = "SELECTED_INTENT";
 
-    public static final int MAX_TRY_GET_ADDRESS_COUNT = 5;
-    private static final float ALLOWED_ACCURACY = 20;
+    public static final int MAX_TRY_GET_ADDRESS_COUNT = 15;
     private int currentTryCount;
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private ShareActionProvider mShareActionProvider;
     private LocationClient mLocationClient;
-    private Resources mResource;
+    private SharedPreferences sharedPreferences;
     Location mFoundLocation;
     Marker mCurrentLocationMarker;
 
@@ -77,7 +74,7 @@ public class MapsActivity extends FragmentActivity implements
             .setFastestInterval(16)    // 16ms = 60fps
             .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-    TextView tvAddress, tvNearBy, tvGmLink, tvLatlng;
+    TextView tvLocation;
 
     private boolean initializedLocation = false;
 
@@ -96,12 +93,9 @@ public class MapsActivity extends FragmentActivity implements
         setContentView(R.layout.activity_maps);
         currentTryCount = 0;
 
-        mResource = getResources();
+        sharedPreferences = getPreferences(MODE_PRIVATE);
 
-        tvAddress = (TextView) findViewById(R.id.tvAddress);
-        tvNearBy = (TextView) findViewById(R.id.tvLocationNearBy);
-        tvGmLink = (TextView) findViewById(R.id.tvGmapLink);
-        tvLatlng = (TextView) findViewById(R.id.tvLocation);
+        tvLocation = (TextView) findViewById(R.id.tvLocation);
 
         mMessage = new LocationMessage(this);
 
@@ -155,7 +149,6 @@ public class MapsActivity extends FragmentActivity implements
 
         if(lastKnownLocation != null) {
             lastKnownLatLng = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
-            mMessage.setLatLng(lastKnownLatLng);
         }
         else {
             Log.i(TAG, "Not found Last known location");
@@ -200,21 +193,6 @@ public class MapsActivity extends FragmentActivity implements
         setUpMapIfNeeded();
     }
 
-    /**
-     * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
-     * installed) and the map has not already been instantiated.. This will ensure that we only ever
-     * call {@link #setUpMap()} once when {@link #mMap} is not null.
-     * <p/>
-     * If it isn't installed {@link SupportMapFragment} (and
-     * {@link com.google.android.gms.maps.MapView MapView}) will show a prompt for the user to
-     * install/update the Google Play services APK on their device.
-     * <p/>
-     * A user can return to this FragmentActivity after following the prompt and correctly
-     * installing/updating/enabling the Google Play services. Since the FragmentActivity may not
-     * have been completely destroyed during this process (it is likely that it would only be
-     * stopped or paused), {@link #onCreate(Bundle)} may not be called again so we should call this
-     * method in {@link #onResume()} to guarantee that it will be called.
-     */
     private void setUpMapIfNeeded() {
         // Do a null check to confirm that we have not already instantiated the map.
         if (mMap == null) {
@@ -228,12 +206,6 @@ public class MapsActivity extends FragmentActivity implements
         }
     }
 
-    /**
-     * This is where we can add markers or lines, add listeners or move the camera. In this case, we
-     * just add a marker near Africa.
-     * <p/>
-     * This should only be called once and when we are sure that {@link #mMap} is not null.
-     */
     private void setUpMap() {
         Log.i(TAG, "setupMap");
 
@@ -247,15 +219,8 @@ public class MapsActivity extends FragmentActivity implements
         mMap.setOnMyLocationButtonClickListener(this);
         mMap.setOnMapClickListener(this);
         if(lastKnownLatLng!=null) {
-            MarkerOptions options = new MarkerOptions()
-                    .position(lastKnownLatLng)
-                    .icon(BitmapDescriptorFactory
-                            .defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
-            mCurrentLocationMarker = mMap.addMarker(options);
             CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(lastKnownLatLng, 16);
             mMap.moveCamera(cameraUpdate);
-
-            mMessage.setLatLng(lastKnownLatLng);
         }
         mMap.setOnIndoorStateChangeListener(this);
     }
@@ -272,6 +237,7 @@ public class MapsActivity extends FragmentActivity implements
             @Override
             public boolean onShareTargetSelected(ShareActionProvider shareActionProvider, Intent intent) {
                 // save the intent for later use
+                // TODO: write code to use this saved intent
                 SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString(PREF_SELECTED_INTENT,intent.toUri(Intent.URI_INTENT_SCHEME));
@@ -320,30 +286,33 @@ public class MapsActivity extends FragmentActivity implements
         mLocationClient.requestLocationUpdates(
                 REQUEST,
                 this);  // LocationListener
-
     }
 
-
-
+    // Location information come from the device
     @Override
     public void onLocationChanged(Location location) {
         Log.i(TAG,"Try Num# "+currentTryCount+++":Device location is changed to: "+location);
-        if(currentTryCount>MAX_TRY_GET_ADDRESS_COUNT && mMessage.isFoundUserAddress()) {
+        if(currentTryCount > MAX_TRY_GET_ADDRESS_COUNT || mMessage.isFoundUserAddress()) {
             // only try a few times to get the user address then stop
             mLocationClient.disconnect();
         }
+
         // update message
-        if(userSelectedLocation==null && location.getAccuracy() < ALLOWED_ACCURACY) {
-            if(mFoundLocation==null) mFoundLocation = location;
-            if(mFoundLocation.getAccuracy() > location.getAccuracy()) {
-                mFoundLocation = location;
-            }
+        if(userSelectedLocation == null &&
+                (mFoundLocation==null ||
+                        mFoundLocation.getAccuracy() > location.getAccuracy())) {
+            // first time found a location or the new location has improved accuracy
+            mFoundLocation = location;
 
             mMessage.setLatLng(parseLatLng(mFoundLocation));
             setMarkerLocation(mMessage.getLatLng());
+            setLatLngInformation(mMessage.getLatLng());
 
+            // TODO: check if the address preference is ticked
             // only search address for location with high accuracy
-            (new GetAddressTask(this)).execute(location);
+            if(sharedPreferences.getBoolean("enable_address", true)) {
+                (new GetAddressTask(this)).execute(location);
+            }
         }
     }
 
@@ -368,27 +337,12 @@ public class MapsActivity extends FragmentActivity implements
         }
     }
 
-    private void changeMarkerLocationAndUpdateShareMessage(Address address) {
+    private void setAddressInformation(Address address) {
         Log.i(TAG, "Address is changed to "+address+". User selected location: "+userSelectedLocation);
         mMessage.setAddress(address);
 
-        LatLng latLng = parseLatLng(address);
-        if(userSelectedLocation!=null) {
-            latLng = userSelectedLocation;
-        }
-
         // show the address estimated on the preview
-        tvAddress.setText(mMessage.getAddressLine());
-        if(address.getPremises()!=null) {
-            tvNearBy.setText(String.format("%s", address.getPremises()));
-            tvNearBy.setVisibility(View.VISIBLE);
-        }
-        else {
-            tvNearBy.setText("");
-            tvNearBy.setVisibility(View.GONE);
-        }
-
-        setLatLngInformation(latLng);
+        tvLocation.setText(mMessage.toString());
 
         // update share intent message
         mShareActionProvider.setShareIntent(createShareIntent());
@@ -396,8 +350,10 @@ public class MapsActivity extends FragmentActivity implements
 
     private void setLatLngInformation(LatLng latLng) {
         mMessage.setLatLng(latLng);
-        tvLatlng.setText(mMessage.getLatLngDisplay());
-        tvGmLink.setText(mMessage.getMapLinkDisplay());
+        tvLocation.setText(mMessage.toString());
+
+        // update share intent message
+        mShareActionProvider.setShareIntent(createShareIntent());
     }
 
     @Override
@@ -413,6 +369,16 @@ public class MapsActivity extends FragmentActivity implements
     @Override
     public boolean onMyLocationButtonClick() {
         userSelectedLocation = null;
+
+        // remove the marker
+        mCurrentLocationMarker.remove();
+        mCurrentLocationMarker = null;
+
+        // reset the count
+        currentTryCount = 0;
+        // set this to allow the location service to continue
+        mMessage.setFoundUserAddress(false);
+
         return false;
     }
 
@@ -422,19 +388,23 @@ public class MapsActivity extends FragmentActivity implements
         userSelectedLocation = latLng;
         setLatLngInformation(latLng);
 
+        // stop the location service from searching further
+        mMessage.setFoundUserAddress(false);
+
         // update shared intent message for latlng update
         mShareActionProvider.setShareIntent(createShareIntent());
 
-        mCurrentLocationMarker.setPosition(userSelectedLocation);
+        setMarkerLocation(userSelectedLocation);
+
         // move camera to the current location marker
         CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLng(userSelectedLocation);
         mMap.animateCamera(cameraUpdate);
-        mMessage.setFoundUserAddress(true);
-
 
         // request revert geocode to find address
         // TODO: check the config before doing so
-        (new GetAddressTask(this)).execute(parseLocation(latLng));
+        if(sharedPreferences.getBoolean("enable_address", true)) {
+            (new GetAddressTask(this)).execute(parseLocation(latLng));
+        }
     }
 
     @Override
@@ -497,7 +467,7 @@ public class MapsActivity extends FragmentActivity implements
         @Override
         protected void onPostExecute(List<Address> addresses) {
             if(addresses!=null && addresses.size()>0) {
-                changeMarkerLocationAndUpdateShareMessage(addresses.get(0));
+                setAddressInformation(addresses.get(0));
             }
             else if(userSelectedLocation!=null) {
                 Toast.makeText(mContext,

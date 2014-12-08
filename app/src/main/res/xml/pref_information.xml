@@ -1,0 +1,14 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <Preference android:title="Information">
+        <intent android:action="android.intent.action.VIEW"
+            android:targetClass="mobile.wnext.sharemylocation.AboutActivity"
+            android:targetPackage="mobile.wnext.sharemylocation"/>
+    </Preference>
+    <Preference android:title="Contact developer">
+        <intent android:action="android.intent.action.SEND"
+            android:data="mailto:nguyennt86@gmail.com"
+            android:mimeType="text/plain"/>
+    </Preference>
+
+</PreferenceScreen>
