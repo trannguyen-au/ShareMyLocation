@@ -30,17 +30,21 @@
             android:label="@string/title_activity_maps" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
             android:name="mobile.wnext.sharemylocation.SettingsActivity"
-            android:label="@string/title_activity_settings" >
+            android:label="@string/title_activity_settings" android:parentActivityName=".MapsActivity">
+            <meta-data android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MapsActivity" />
         </activity>
         <activity
             android:name="mobile.wnext.sharemylocation.AboutActivity"
-            android:label="@string/title_activity_about" >
+            android:label="@string/title_activity_about"
+            android:parentActivityName="mobile.wnext.sharemylocation.MapsActivity">
+            <meta-data android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MapsActivity" />
         </activity>
     </application>
 

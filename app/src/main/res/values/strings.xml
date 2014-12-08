@@ -2,11 +2,15 @@
 <resources>
 
     <string name="app_name">ShareMyLocation</string>
-    <string name="title_activity_maps">Map</string>
+    <string name="title_activity_maps">Share My Location</string>
+    <string name="title_activity_about">About Share My Location App</string>
+
     <string name="message">clip_board_message</string>
     <string name="str_my_location_is">My location is %s</string>
-    <string name="title_activity_about">AboutActivity</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
-
+    <string-array name="map_type_list">
+        <item>Street Map</item>
+        <item>Earth</item>
+    </string-array>
 </resources>
