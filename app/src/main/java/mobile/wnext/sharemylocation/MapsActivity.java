@@ -10,6 +10,7 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -50,6 +51,7 @@ public class MapsActivity extends FragmentActivity implements
 
     public static final String TAG = "ShareMyLocation";
     public static final String PREF_SELECTED_INTENT = "SELECTED_INTENT";
+    public static final int REQUEST_CODE_SETTING=0;
 
     public static final int MAX_TRY_GET_ADDRESS_COUNT = 15;
     private int currentTryCount;
@@ -58,6 +60,7 @@ public class MapsActivity extends FragmentActivity implements
     private ShareActionProvider mShareActionProvider;
     private LocationClient mLocationClient;
     private SharedPreferences sharedPreferences;
+    private SettingsActivity.AppSettings appSettings;
     Location mFoundLocation;
     Marker mCurrentLocationMarker;
 
@@ -74,7 +77,6 @@ public class MapsActivity extends FragmentActivity implements
             .setFastestInterval(16)    // 16ms = 60fps
             .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-    TextView tvLocation;
 
     private boolean initializedLocation = false;
 
@@ -93,11 +95,9 @@ public class MapsActivity extends FragmentActivity implements
         setContentView(R.layout.activity_maps);
         currentTryCount = 0;
 
-        sharedPreferences = getPreferences(MODE_PRIVATE);
-
-        tvLocation = (TextView) findViewById(R.id.tvLocation);
-
-        mMessage = new LocationMessage(this);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        appSettings = new SettingsActivity.AppSettings(this);
+        mMessage = new LocationMessage(this, (TextView) findViewById(R.id.tvLocation), appSettings);
 
         mLocationClient = new LocationClient(this, this, this);
 
@@ -157,7 +157,18 @@ public class MapsActivity extends FragmentActivity implements
 
     private void dispatchSettingIntent() {
         Intent settingIntent = new Intent(getApplicationContext(), SettingsActivity.class);
-        startActivity(settingIntent);
+        startActivityForResult(settingIntent,REQUEST_CODE_SETTING);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+        Log.i(TAG, "Activity return from code: "+requestCode);
+        if(resultCode == RESULT_OK && requestCode == REQUEST_CODE_SETTING) {
+            // rebind the text message
+            mMessage.bindData();
+
+            //
+        }
     }
 
     /*
@@ -168,6 +179,7 @@ public class MapsActivity extends FragmentActivity implements
         super.onStart();
         Log.i(TAG, "onStart");
         // Connect the client.
+
         if(mLocationClient!=null)
             mLocationClient.connect();
     }
@@ -185,12 +197,25 @@ public class MapsActivity extends FragmentActivity implements
         super.onStop();
     }
 
+    @Override
+    protected  void onDestroy() {
+        Log.i(TAG, "onDestroy");
+        super.onDestroy();
+    }
+
+    @Override
+    protected  void onPause() {
+        Log.i(TAG, "onPause");
+        super.onPause();
+    }
+
 
     @Override
     protected void onResume() {
         super.onResume();
         Log.i(TAG, "onResume");
         setUpMapIfNeeded();
+        Log.i(TAG, appSettings.toString());
     }
 
     private void setUpMapIfNeeded() {
@@ -272,14 +297,6 @@ public class MapsActivity extends FragmentActivity implements
         Toast.makeText(this, "Message has been copied to clipboard", Toast.LENGTH_SHORT).show();
     }
 
-    private Intent createShareIntent() {
-        String message = mMessage.toString();
-        Intent messageIntent = new Intent(Intent.ACTION_SEND);
-        messageIntent.setType("text/plain");
-        messageIntent.putExtra(Intent.EXTRA_TEXT, message);
-        return messageIntent;
-    }
-
     @Override
     public void onConnected(Bundle bundle) {
         Log.i(TAG, "onConnected "+bundle);
@@ -291,6 +308,9 @@ public class MapsActivity extends FragmentActivity implements
     // Location information come from the device
     @Override
     public void onLocationChanged(Location location) {
+        if(mMessage==null || mLocationClient==null || mShareActionProvider==null || appSettings==null)
+            return; // wait until the screen is ready
+
         Log.i(TAG,"Try Num# "+currentTryCount+++":Device location is changed to: "+location);
         if(currentTryCount > MAX_TRY_GET_ADDRESS_COUNT || mMessage.isFoundUserAddress()) {
             // only try a few times to get the user address then stop
@@ -305,12 +325,12 @@ public class MapsActivity extends FragmentActivity implements
             mFoundLocation = location;
 
             mMessage.setLatLng(parseLatLng(mFoundLocation));
+            // update share intent message
+            mShareActionProvider.setShareIntent(mMessage.getShareIntent());
             setMarkerLocation(mMessage.getLatLng());
-            setLatLngInformation(mMessage.getLatLng());
 
-            // TODO: check if the address preference is ticked
             // only search address for location with high accuracy
-            if(sharedPreferences.getBoolean("enable_address", true)) {
+            if(appSettings.enableAddress()) {
                 (new GetAddressTask(this)).execute(location);
             }
         }
@@ -338,22 +358,18 @@ public class MapsActivity extends FragmentActivity implements
     }
 
     private void setAddressInformation(Address address) {
-        Log.i(TAG, "Address is changed to "+address+". User selected location: "+userSelectedLocation);
+        Log.i(TAG, "Address is changed to "+address+".\n User selected location: "+userSelectedLocation);
         mMessage.setAddress(address);
 
-        // show the address estimated on the preview
-        tvLocation.setText(mMessage.toString());
-
         // update share intent message
-        mShareActionProvider.setShareIntent(createShareIntent());
+        mShareActionProvider.setShareIntent(mMessage.getShareIntent());
     }
 
     private void setLatLngInformation(LatLng latLng) {
         mMessage.setLatLng(latLng);
-        tvLocation.setText(mMessage.toString());
 
         // update share intent message
-        mShareActionProvider.setShareIntent(createShareIntent());
+        mShareActionProvider.setShareIntent(mMessage.getShareIntent());
     }
 
     @Override
@@ -376,8 +392,8 @@ public class MapsActivity extends FragmentActivity implements
 
         // reset the count
         currentTryCount = 0;
-        // set this to allow the location service to continue
-        mMessage.setFoundUserAddress(false);
+
+        mMessage.setAddress(null);
 
         return false;
     }
@@ -386,13 +402,11 @@ public class MapsActivity extends FragmentActivity implements
     public void onMapClick(LatLng latLng) {
         Log.i(TAG,"User click to latlng: "+latLng);
         userSelectedLocation = latLng;
-        setLatLngInformation(latLng);
-
-        // stop the location service from searching further
-        mMessage.setFoundUserAddress(false);
+        mMessage.setLatLng(latLng);
+        mMessage.setAddress(null);
 
         // update shared intent message for latlng update
-        mShareActionProvider.setShareIntent(createShareIntent());
+        mShareActionProvider.setShareIntent(mMessage.getShareIntent());
 
         setMarkerLocation(userSelectedLocation);
 
@@ -401,27 +415,20 @@ public class MapsActivity extends FragmentActivity implements
         mMap.animateCamera(cameraUpdate);
 
         // request revert geocode to find address
-        // TODO: check the config before doing so
-        if(sharedPreferences.getBoolean("enable_address", true)) {
+        if(appSettings.enableAddress()) {
             (new GetAddressTask(this)).execute(parseLocation(latLng));
         }
     }
 
     @Override
     public void onIndoorBuildingFocused() {
-        mMessage.setIndoor(true);
+        Log.i(TAG, "onIndoorBuildingFocused");
+        mMessage.setIndoorBuilding(mMap.getFocusedBuilding());
     }
 
     @Override
     public void onIndoorLevelActivated(IndoorBuilding indoorBuilding) {
-        if(indoorBuilding.getActiveLevelIndex() == indoorBuilding.getDefaultLevelIndex()) {
-            mMessage.setIndoor(false);
-        }
-        else {
-            mMessage.setIndoor(true);
-        }
-        mMessage.setIndoorLevel(indoorBuilding.getActiveLevelIndex());
-        mMessage.setUnderground(indoorBuilding.isUnderground());
+        mMessage.setIndoorBuilding(indoorBuilding);
     }
 
     private class GetAddressTask extends AsyncTask<Location, Void, List<Address>> {
@@ -493,4 +500,5 @@ public class MapsActivity extends FragmentActivity implements
     private LatLng parseLatLng(final Location location) {
         return new LatLng(location.getLatitude(),location.getLongitude());
     }
+
 }

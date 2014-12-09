@@ -6,9 +6,9 @@
             android:targetPackage="mobile.wnext.sharemylocation"/>
     </Preference>
     <Preference android:title="Contact developer">
-        <intent android:action="android.intent.action.SEND"
-            android:data="mailto:nguyennt86@gmail.com"
-            android:mimeType="text/plain"/>
+        <intent android:action="android.intent.action.VIEW"
+            android:data="mailto:nguyennt86@gmail.com?subject=ShareMyLocation Feedback">
+            </intent>
     </Preference>
 
 </PreferenceScreen>

@@ -23,6 +23,12 @@
         android:summary="Estimated address (if found) will be included in the message"
         android:defaultValue="true" />
     <CheckBoxPreference
+        android:key="enable_extra_address"
+        android:dependency="enable_address"
+        android:title="Include detailed address"
+        android:summary="Include extra information about your location such as: indoor level, building name, etc.. if any"
+        android:defaultValue="true" />
+    <CheckBoxPreference
         android:key="enable_map_link"
         android:title="Include map link"
         android:summary="Send google map link which allow others to view your location on Google map"

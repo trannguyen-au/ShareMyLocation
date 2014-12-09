@@ -2,7 +2,9 @@ package mobile.wnext.sharemylocation;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -41,6 +43,15 @@ public class SettingsActivity extends PreferenceActivity {
      */
     private static final boolean ALWAYS_SIMPLE_PREFS = false;
 
+    public static final String KEY_ENABLE_CUSTOM_MESSAGE = "enable_custom_message";
+    public static final String KEY_TEXT_CUSTOM_MESSAGE = "text_custom_message";
+    public static final String KEY_ENABLE_LATLNG = "enable_latlng";
+    public static final String KEY_ENABLE_ADDRESS = "enable_address";
+    public static final String KEY_ENABLE_EXTRA_ADDRESS = "enable_extra_address";
+    public static final String KEY_ENABLE_MAP_LINK = "enable_map_link";
+    public static final String KEY_ENABLE_APP_INFO = "enable_app_info";
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,6 +68,13 @@ public class SettingsActivity extends PreferenceActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void onBackPressed(){
+        // set the result intent before exit
+        setResult(RESULT_OK);
+        super.onBackPressed();
     }
 
     @Override
@@ -210,6 +228,52 @@ public class SettingsActivity extends PreferenceActivity {
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_information);
+        }
+    }
+
+    public static class AppSettings {
+        SharedPreferences mPreferences;
+        Resources mResources;
+
+        public AppSettings(Context context) {
+            mPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+            mResources = context.getResources();
+        }
+
+        public boolean enableCustomMessage() {
+            return mPreferences.getBoolean(KEY_ENABLE_CUSTOM_MESSAGE, true);
+        }
+
+        public boolean enableLatLng() {
+            return mPreferences.getBoolean(KEY_ENABLE_LATLNG, true);
+        }
+        public boolean enableAddress() {
+            return mPreferences.getBoolean(KEY_ENABLE_ADDRESS, true);
+        }
+        public boolean enableExtraAddress() {
+            return mPreferences.getBoolean(KEY_ENABLE_EXTRA_ADDRESS, true);
+        }
+        public boolean enableMapLink() {
+            return mPreferences.getBoolean(KEY_ENABLE_MAP_LINK, true);
+        }
+        public boolean enableAppInfo() {
+            return mPreferences.getBoolean(KEY_ENABLE_APP_INFO, true);
+        }
+
+        public String textCustomMessage() {
+            return mPreferences.getString(KEY_TEXT_CUSTOM_MESSAGE,
+                    mResources.getString(R.string.str_my_location_is));
+        }
+
+        @Override
+        public String toString() {
+            return  "KEY_ENABLE_CUSTOM_MESSAGE : "+enableCustomMessage()+
+                    " KEY_ENABLE_LATLNG: "+enableLatLng() +
+                    " KEY_ENABLE_ADDRESS: "+enableAddress()+
+                    " KEY_ENABLE_EXTRA_ADDRESS: "+enableExtraAddress()+
+                    " KEY_ENABLE_MAP_LINK: "+enableMapLink()+
+                    " KEY_ENABLE_APP_INFO: "+enableAppInfo()+
+                    " KEY_TEXT_CUSTOM_MESSAGE: "+textCustomMessage();
         }
     }
 }
