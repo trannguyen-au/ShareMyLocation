@@ -14,7 +14,7 @@
         android:layout_alignParentBottom="true"
         android:background="#77dddddd">
         <TextView
-            android:text="Preview message:"
+            android:text="@string/str_preview_message"
             android:layout_alignParentStart="true"
             android:id="@+id/lblPreviewText"
             style="@style/PreviewTextStyle"/>
@@ -41,7 +41,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:id="@+id/tvLocation"
-                    android:text="Searching for your location..."
+                    android:text="@string/str_searching_for_your_location"
                     android:layout_alignParentTop="true"
                     android:layout_alignParentStart="true" />
             </LinearLayout>

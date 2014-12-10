@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.location.Address;
-import android.util.Log;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.model.IndoorBuilding;
@@ -18,7 +17,8 @@ import java.util.Locale;
  * Created by Nnguyen on 5/12/2014.
  */
 public class LocationMessage {
-    public final String NEW_LINE = "\n";
+    public static final String NEW_LINE = "\n";
+    public static final String DOUBLE_FORMAT = "%s";
 
     private boolean foundUserAddress;
 
@@ -33,6 +33,12 @@ public class LocationMessage {
     private TextView mView;
     Intent messageIntent;
 
+    private DecimalFormat decimalFormat = new DecimalFormat("###.######",
+            DecimalFormatSymbols.getInstance(Locale.ENGLISH));
+    private String mapLinkFormat = "http://maps.google.com/maps?&z=16&q="+DOUBLE_FORMAT+"+"+DOUBLE_FORMAT+
+            "&ll="+DOUBLE_FORMAT+"+"+DOUBLE_FORMAT;
+
+
     public LocationMessage(Context context, TextView view, SettingsActivity.AppSettings appSettings){
         mResource = context.getResources();
         mAppSettings = appSettings;
@@ -45,37 +51,45 @@ public class LocationMessage {
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
+        String tmpText = null;
 
-        if(mAppSettings.enableCustomMessage()
-                && mAppSettings.textCustomMessage()!=null
-                && mAppSettings.textCustomMessage().length()>0) {
-            result.append(mAppSettings.textCustomMessage() + NEW_LINE );
-        }
-
-        if(mAppSettings.enableLatLng() && getLatLngDisplay().length()>0) {
-            result.append(getLatLngDisplay() + NEW_LINE + NEW_LINE );
-        }
-
-        if(mAppSettings.enableExtraAddress() && indoorBuilding!=null){
-            String extraLocationMessage = getExtraLocationMessage();
-            if(extraLocationMessage.length()>0) {
-                result.append(extraLocationMessage + NEW_LINE);
+        if(mAppSettings.enableCustomMessage()) {
+            tmpText = mAppSettings.textCustomMessage();
+            if(!isNullOrEmpty(tmpText)) {
+                result.append(tmpText + NEW_LINE);
             }
         }
 
-        if(mAppSettings.enableAddress()
-                && getAddressLine().length()>0) {
-            result.append(getAddressLine() + NEW_LINE + NEW_LINE);
+        if(mAppSettings.enableLatLng()) {
+            tmpText = getLatLngDisplay();
+            if(!isNullOrEmpty(tmpText))
+                result.append(tmpText + NEW_LINE + NEW_LINE );
         }
 
-        if(mAppSettings.enableMapLink()&& getMapLinkDisplay().length()>0) {
-            result.append(getMapLinkDisplay() + NEW_LINE + NEW_LINE);
+        if(mAppSettings.enableExtraAddress() && indoorBuilding!=null){
+            tmpText = getExtraLocationMessage();
+            if(!isNullOrEmpty(tmpText)) {
+                result.append(tmpText + NEW_LINE);
+            }
+        }
+
+        if(mAppSettings.enableAddress()) {
+            tmpText = getAddressLine();
+            if(!isNullOrEmpty(tmpText))
+                result.append(tmpText + NEW_LINE + NEW_LINE);
+        }
+
+        if(mAppSettings.enableMapLink()) {
+            tmpText = getMapLinkDisplay();
+            if(!isNullOrEmpty(tmpText))
+                result.append(tmpText + NEW_LINE + NEW_LINE);
         }
 
         if(mAppSettings.enableAppInfo()) {
             result.append(mResource.getString(R.string.app_info_message)+ NEW_LINE + NEW_LINE);
         }
 
+        // remove the last 2 new line characters
         result.delete(result.length()-2,result.length());
 
         return result.toString();
@@ -85,7 +99,7 @@ public class LocationMessage {
         if(indoorBuilding==null) return "";
         else {
             if(indoorBuilding.isUnderground()) {
-                return "Underground";
+                return mResource.getString(R.string.str_underground);
             }
             else {
                 return indoorBuilding.getLevels().get(indoorBuilding.getActiveLevelIndex()).getName().trim().replace("\n"," ");
@@ -136,15 +150,10 @@ public class LocationMessage {
 
     public String getMapLinkDisplay() {
         if(latLng==null) return "";
-        return String.format("http://maps.google.com/maps?&z=16&q="+DOUBLE_FORMAT+"+"+DOUBLE_FORMAT+
-                        "&ll="+DOUBLE_FORMAT+"+"+DOUBLE_FORMAT,
+        return String.format(mapLinkFormat,
                 decimalFormat.format(latLng.latitude), decimalFormat.format(latLng.longitude),
                 decimalFormat.format(latLng.latitude), decimalFormat.format(latLng.longitude));
     }
-
-    private DecimalFormat decimalFormat = new DecimalFormat("###.######",
-            DecimalFormatSymbols.getInstance(Locale.ENGLISH));
-    private String DOUBLE_FORMAT = "%s";
 
     public Intent getShareIntent() {
         if(messageIntent.hasExtra(Intent.EXTRA_TEXT)) {
@@ -164,5 +173,9 @@ public class LocationMessage {
     public void setIndoorBuilding(IndoorBuilding indoorBuilding) {
         this.indoorBuilding = indoorBuilding;
         bindData();
+    }
+
+    private boolean isNullOrEmpty(String str) {
+        return (str==null || str.trim().length() == 0);
     }
 }

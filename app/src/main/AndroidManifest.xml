@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="mobile.wnext.sharemylocation" >
+    package="mobile.wnext.sharemylocation"
+    android:versionCode="1"
+    android:versionName="1.0">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -30,22 +32,29 @@
             android:label="@string/title_activity_maps" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
             android:name="mobile.wnext.sharemylocation.SettingsActivity"
-            android:label="@string/title_activity_settings" android:parentActivityName=".MapsActivity">
-            <meta-data android:name="android.support.PARENT_ACTIVITY"
+            android:label="@string/title_activity_settings"
+            android:parentActivityName="mobile.wnext.sharemylocation.MapsActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MapsActivity" />
         </activity>
         <activity
             android:name="mobile.wnext.sharemylocation.AboutActivity"
             android:label="@string/title_activity_about"
-            android:parentActivityName="mobile.wnext.sharemylocation.MapsActivity">
-            <meta-data android:name="android.support.PARENT_ACTIVITY"
+            android:parentActivityName="mobile.wnext.sharemylocation.MapsActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MapsActivity" />
         </activity>
+        <activity android:name="com.google.android.gms.ads.AdActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"
+            android:theme="@android:style/Theme.Translucent" />
     </application>
 
 </manifest>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Cài đặt</string><string name="app_info_message">--------\n
+    Gửi qua ứng dụng ShareMyLocation </string>
+    <string name="pref_header_information">Thông tin</string>
+    <string name="pref_header_message">Tùy chỉnh tin nhắn</string>
+    <string name="pref_summary_enable_address">Địa chỉ ước tính nếu được tìm thấy sẽ thêm vào tin nhắn</string>
+    <string name="pref_summary_enable_app_info">Chia sẻ ứng dụng với bạn bè</string>
+    <string name="pref_summary_enable_extra_address">Thêm thông tin chi tiết về địa điểm, ví dụ như tầng của khu nhà nếu tìm thấy</string>
+    <string name="pref_summary_enable_map_link">Thêm đường dẫn Google Map vào thông điệp</string>
+    <string name="pref_title_app_information">Thông tin về ứng dụng</string>
+    <string name="pref_title_contact_developer">Liên hệ </string>
+    <string name="pref_title_custom_message">Tùy chỉnh thông điệp</string>
+    <string name="pref_title_enable_address">Thêm địa chỉ</string>
+    <string name="pref_title_enable_app_info">Thêm thông tin ứng dụng</string>
+    <string name="pref_title_enable_custom_message">Cho phép tùy chỉnh thêm thông điệp</string>
+    <string name="pref_title_enable_extra_address">Thêm chi tiết địa chỉ</string>
+    <string name="pref_title_enable_latlng">Thêm thông tin định vị</string>
+    <string name="pref_title_enable_map_link">Thêm đường dẫn tới bản đồ</string>
+    <string name="str_message_copied_to_clipboard">Thông điệp đã được sao chép</string>
+    <string name="str_my_location_is">Địa điểm của tôi: </string>
+    <string name="str_preview_message">Xem trước thông điệp</string>
+    <string name="str_searching_for_your_location">Đang định vị địa điểm của bạn&#8230;</string>
+    <string name="str_underground">Dưới tầng ngầm</string>
+    <string name="str_wait_for_ready_map">Xin chờ bản đồ kích hoạt xong</string>
+    <string name="title_activity_about">Thông tin về ứng dụng Share My Location</string>
+    <string name="title_activity_maps">Share My Location</string>
+    <string name="title_activity_settings">Hiệu chỉnh</string>
+    <string-array name="map_type_list">
+        <item>Đường phố</item>
+        <item>Vệ Tinh</item>
+    </string-array>
+</resources>

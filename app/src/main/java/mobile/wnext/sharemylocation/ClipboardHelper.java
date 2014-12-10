@@ -41,7 +41,7 @@ public class ClipboardHelper {
                 android.content.ClipData clip = android.content.ClipData
                         .newPlainText(
                                 mContext.getResources().getString(
-                                        R.string.message), text);
+                                        R.string.clipboard_message_label), text);
                 clipboard.setPrimaryClip(clip);
             }
             return true;

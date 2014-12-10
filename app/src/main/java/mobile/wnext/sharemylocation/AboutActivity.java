@@ -1,20 +1,23 @@
 package mobile.wnext.sharemylocation;
 
-import android.app.ActionBar;
 import android.app.Activity;
 import android.os.Bundle;
-import android.view.Menu;
+import android.text.Html;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 
 public class AboutActivity extends Activity {
+
+    TextView tvMessage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_about);
         getActionBar().setDisplayHomeAsUpEnabled(true);
-
+        tvMessage = (TextView) findViewById(R.id.tvMessage);
+        tvMessage.setText(Html.fromHtml(getResources().getString(R.string.privacy_statement)));
     }
 
 

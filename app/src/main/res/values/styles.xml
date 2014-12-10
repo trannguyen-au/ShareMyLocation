@@ -26,8 +26,7 @@
     </style>
 
     <style name="PreviewTextStyle">
-        <item name="android:shadowColor">#99333333</item>
-        <item name="android:textColor">#ff78aae7</item>
+        <item name="android:textColor">@color/light_blue_text</item>
         <item name="android:layout_marginTop">5dp</item>
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">wrap_content</item>

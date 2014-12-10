@@ -1,11 +1,11 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <Preference android:title="Information">
+    <Preference android:title="@string/pref_title_app_information">
         <intent android:action="android.intent.action.VIEW"
             android:targetClass="mobile.wnext.sharemylocation.AboutActivity"
             android:targetPackage="mobile.wnext.sharemylocation"/>
     </Preference>
-    <Preference android:title="Contact developer">
+    <Preference android:title="@string/pref_title_contact_developer">
         <intent android:action="android.intent.action.VIEW"
             android:data="mailto:nguyennt86@gmail.com?subject=ShareMyLocation Feedback">
             </intent>

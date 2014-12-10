@@ -1,0 +1,4 @@
+<resources>
+    <string name="google_maps_key" templateMergeStrategy="preserve">AIzaSyCKt0fpra_HFChCRpGT87a7dZO0vNGR3_g</string>
+    <string name="ad_unit_id">ca-app-pub-6205043765034301/2958767476</string>
+</resources>

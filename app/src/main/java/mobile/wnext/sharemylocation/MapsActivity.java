@@ -5,11 +5,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.location.Address;
+import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.http.AndroidHttpClient;
 import android.os.AsyncTask;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -22,6 +26,9 @@ import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
 import com.google.android.gms.location.LocationClient;
@@ -36,6 +43,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.location.LocationListener;
+
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.List;
@@ -52,6 +64,7 @@ public class MapsActivity extends FragmentActivity implements
     public static final String TAG = "ShareMyLocation";
     public static final String PREF_SELECTED_INTENT = "SELECTED_INTENT";
     public static final int REQUEST_CODE_SETTING=0;
+    public static final int REQUEST_CODE_ADS=0;
 
     public static final int MAX_TRY_GET_ADDRESS_COUNT = 15;
     private int currentTryCount;
@@ -88,13 +101,18 @@ public class MapsActivity extends FragmentActivity implements
     // this value will be used when the map is setup to reduce the time of loading world map.
     private LatLng lastKnownLatLng = null;
 
+    // display ads before exit
+    private InterstitialAd interstitial;
+
+    TextView lblPreviewText;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, "onCreated");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         currentTryCount = 0;
-
+        lblPreviewText = (TextView) findViewById(R.id.lblPreviewText);
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         appSettings = new SettingsActivity.AppSettings(this);
         mMessage = new LocationMessage(this, (TextView) findViewById(R.id.tvLocation), appSettings);
@@ -105,6 +123,43 @@ public class MapsActivity extends FragmentActivity implements
         setUpMapIfNeeded();
 
         initializeActionBar();
+
+        loadAdRequest();
+    }
+
+    private void loadAdRequest() {
+        // Create the interstitial.
+        interstitial = new InterstitialAd(this);
+        interstitial.setAdUnitId(getString(R.string.ad_unit_id));
+        interstitial.setAdListener(new AdListener() {
+            @Override
+            public void onAdClosed() {
+                super.onAdClosed();
+                exitApp();
+            }
+        });
+
+        // Create ad request.
+        AdRequest adRequest = new AdRequest.Builder()
+                .setLocation(parseLocation(lastKnownLatLng))
+                .build();
+
+        // Begin loading your interstitial.
+        interstitial.loadAd(adRequest);
+    }
+
+    // Invoke displayInterstitial() when you are ready to display an interstitial.
+    public boolean displayInterstitial() {
+        if (interstitial.isLoaded()) {
+            interstitial.show();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private void exitApp() {
+        finish();
     }
 
     private void initializeActionBar() {
@@ -116,15 +171,19 @@ public class MapsActivity extends FragmentActivity implements
             @Override
             public boolean onNavigationItemSelected(int index, long l) {
                 if(mMap==null) {
-                    Toast.makeText(MapsActivity.this, "Please wait until the map is ready", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MapsActivity.this,
+                            getResources().getString(R.string.str_wait_for_ready_map),
+                            Toast.LENGTH_SHORT).show();
                     return false;
                 }
                 if(index==0) {  // map
                     mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+                    lblPreviewText.setTextColor(getResources().getColor(R.color.light_blue_text));
                     return true;
                 }
                 else if(index == 1) { // earth
                     mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+                    lblPreviewText.setTextColor(getResources().getColor(R.color.white_text));
                     return true;
                 }
                 return false;
@@ -134,24 +193,26 @@ public class MapsActivity extends FragmentActivity implements
 
     private void findLastKnownLocation() {
         mlocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        Location lastKnownLocation = mlocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if(mlocationManager!=null) {
+            Location lastKnownLocation = mlocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
-        if(lastKnownLocation!=null )Log.i(TAG, "Last known location from GPS provider: "+lastKnownLocation);
+            if (lastKnownLocation != null)
+                Log.i(TAG, "Last known location from GPS provider: " + lastKnownLocation);
 
-        if(lastKnownLocation==null) {
-            lastKnownLocation = mlocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            Log.i(TAG, "Last known location from Network: "+lastKnownLocation);
-        }
-        if(lastKnownLocation == null) {
-            lastKnownLocation = mlocationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
-            Log.i(TAG, "Last known location from Network: "+lastKnownLocation);
-        }
+            if (lastKnownLocation == null) {
+                lastKnownLocation = mlocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                Log.i(TAG, "Last known location from Network: " + lastKnownLocation);
+            }
+            if (lastKnownLocation == null) {
+                lastKnownLocation = mlocationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+                Log.i(TAG, "Last known location from Network: " + lastKnownLocation);
+            }
 
-        if(lastKnownLocation != null) {
-            lastKnownLatLng = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
-        }
-        else {
-            Log.i(TAG, "Not found Last known location");
+            if (lastKnownLocation != null) {
+                lastKnownLatLng = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
+            } else {
+                Log.i(TAG, "Not found Last known location");
+            }
         }
     }
 
@@ -166,8 +227,13 @@ public class MapsActivity extends FragmentActivity implements
         if(resultCode == RESULT_OK && requestCode == REQUEST_CODE_SETTING) {
             // rebind the text message
             mMessage.bindData();
+        }
+    }
 
-            //
+    @Override
+    public void onBackPressed() {
+        if(!displayInterstitial()){
+            super.onBackPressed();
         }
     }
 
@@ -294,7 +360,10 @@ public class MapsActivity extends FragmentActivity implements
     private void copyMessageToClipboard() {
         ClipboardHelper ch = new ClipboardHelper(this);
         ch.copyToClipboard(mMessage.toString());
-        Toast.makeText(this, "Message has been copied to clipboard", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this,
+                getString(R.string.str_message_copied_to_clipboard),
+                Toast.LENGTH_SHORT)
+                .show();
     }
 
     @Override
@@ -385,16 +454,43 @@ public class MapsActivity extends FragmentActivity implements
     @Override
     public boolean onMyLocationButtonClick() {
         userSelectedLocation = null;
-
-        // remove the marker
-        mCurrentLocationMarker.remove();
-        mCurrentLocationMarker = null;
+        mFoundLocation = null;
 
         // reset the count
         currentTryCount = 0;
 
+        final MapsActivity theThis = this;
+
         mMessage.setAddress(null);
 
+        if(mlocationManager!=null) {
+            Criteria criteria = new Criteria();
+            criteria.setAccuracy(Criteria.ACCURACY_FINE);
+            mlocationManager.requestSingleUpdate(
+                    mlocationManager.getBestProvider(criteria, true),
+                    new android.location.LocationListener() {
+                        @Override
+                        public void onLocationChanged(Location location) {
+                            theThis.onLocationChanged(location);
+                        }
+
+                        @Override
+                        public void onStatusChanged(String s, int i, Bundle bundle) {
+
+                        }
+
+                        @Override
+                        public void onProviderEnabled(String s) {
+
+                        }
+
+                        @Override
+                        public void onProviderDisabled(String s) {
+
+                        }
+                    },
+                    Looper.myLooper());
+        }
         return false;
     }
 
@@ -430,6 +526,8 @@ public class MapsActivity extends FragmentActivity implements
     public void onIndoorLevelActivated(IndoorBuilding indoorBuilding) {
         mMessage.setIndoorBuilding(indoorBuilding);
     }
+
+    private final AndroidHttpClient ANDROID_HTTP_CLIENT = AndroidHttpClient.newInstance(GeocoderHelper.class.getName());
 
     private class GetAddressTask extends AsyncTask<Location, Void, List<Address>> {
         Context mContext;
@@ -471,18 +569,102 @@ public class MapsActivity extends FragmentActivity implements
             return addresses;
         }
 
+        private Address fetchCityNameUsingGoogleMap(Location location)
+        {
+            String googleMapUrl = "http://maps.googleapis.com/maps/api/geocode/json?latlng=" + location.getLatitude() + ","
+                    + location.getLongitude() + "&sensor=false&language="+Locale.getDefault().getISO3Language();
+            try
+            {
+                Address address = new Address(Locale.getDefault());
+                JSONObject googleMapResponse = new JSONObject(ANDROID_HTTP_CLIENT.execute(new HttpGet(googleMapUrl),
+                        new BasicResponseHandler()));
+
+                // many nested loops.. not great -> use expression instead
+                // loop among all results
+                JSONArray results = (JSONArray) googleMapResponse.get("results");
+                if(results.length()>0) {
+                    // loop among all addresses within this result
+                    JSONObject result = results.getJSONObject(0);
+                    if (result.has("formatted_address"))
+                    {
+                        String formattedAddress = result.getString("formatted_address");
+
+                        JSONArray addressComponents = result.getJSONArray("address_components");
+                        // loop among all address component to find a 'locality' or 'sublocality'
+                        for (int j = 0; j < addressComponents.length(); j++)
+                        {
+                            JSONObject addressComponent = addressComponents.getJSONObject(j);
+                            if (result.has("types"))
+                            {
+                                JSONArray types = addressComponent.getJSONArray("types");
+
+                                // search for locality and sublocality
+                                String cityName = null;
+
+                                StringBuilder addressLine = new StringBuilder();
+                                for (int k = 0; k < types.length(); k++)
+                                {
+                                    if ("street_number".equals(types.getString(k)) && cityName == null)
+                                    {
+                                        if (addressComponent.has("long_name"))
+                                        {
+                                            cityName = addressComponent.getString("long_name");
+                                        }
+                                        else if (addressComponent.has("short_name"))
+                                        {
+                                            cityName = addressComponent.getString("short_name");
+                                        }
+                                    }
+                                    if ("locality".equals(types.getString(k)) && cityName == null)
+                                    {
+                                        if (addressComponent.has("long_name"))
+                                        {
+                                            cityName = addressComponent.getString("long_name");
+                                        }
+                                        else if (addressComponent.has("short_name"))
+                                        {
+                                            cityName = addressComponent.getString("short_name");
+                                        }
+                                    }
+                                    if ("sublocality".equals(types.getString(k)))
+                                    {
+                                        if (addressComponent.has("long_name"))
+                                        {
+                                            cityName = addressComponent.getString("long_name");
+                                        }
+                                        else if (addressComponent.has("short_name"))
+                                        {
+                                            cityName = addressComponent.getString("short_name");
+                                        }
+                                    }
+                                }
+                                if (cityName != null)
+                                {
+                                    return null;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ignored)
+            {
+                ignored.printStackTrace();
+            }
+            return null;
+        }
+
         @Override
         protected void onPostExecute(List<Address> addresses) {
             if(addresses!=null && addresses.size()>0) {
                 setAddressInformation(addresses.get(0));
             }
-            else if(userSelectedLocation!=null) {
+            /*else if(userSelectedLocation!=null) {
                 Toast.makeText(mContext,
                         "Cannot get address information for the selected location",
                         Toast.LENGTH_SHORT)
                         .show();
-            }
-
+            }*/
         }
     }
 

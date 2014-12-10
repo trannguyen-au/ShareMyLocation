@@ -2,40 +2,38 @@
 
     <CheckBoxPreference
         android:key="enable_custom_message"
-        android:title="Enable custom message"
+        android:title="@string/pref_title_enable_custom_message"
         android:defaultValue="true" />
-
     <EditTextPreference
-        android:title="Custom message"
+        android:title="@string/pref_title_custom_message"
         android:key="text_custom_message"
         android:singleLine="false"
         android:maxLines="3"
         android:defaultValue="My location is: "
         android:dependency="enable_custom_message"/>
-
     <CheckBoxPreference
         android:key="enable_latlng"
-        android:title="Include latitude longitude"
+        android:title="@string/pref_title_enable_latlng"
         android:defaultValue="true" />
     <CheckBoxPreference
         android:key="enable_address"
-        android:title="Include address"
-        android:summary="Estimated address (if found) will be included in the message"
+        android:title="@string/pref_title_enable_address"
+        android:summary="@string/pref_summary_enable_address"
         android:defaultValue="true" />
     <CheckBoxPreference
         android:key="enable_extra_address"
         android:dependency="enable_address"
-        android:title="Include detailed address"
-        android:summary="Include extra information about your location such as: indoor level, building name, etc.. if any"
+        android:title="@string/pref_title_enable_extra_address"
+        android:summary="@string/pref_summary_enable_extra_address"
         android:defaultValue="true" />
     <CheckBoxPreference
         android:key="enable_map_link"
-        android:title="Include map link"
-        android:summary="Send google map link which allow others to view your location on Google map"
+        android:title="@string/pref_title_enable_map_link"
+        android:summary="@string/pref_summary_enable_map_link"
         android:defaultValue="true" />
     <CheckBoxPreference
         android:key="enable_app_info"
-        android:title="Include app information"
-        android:summary="Share the app with your friends"
+        android:title="@string/pref_title_enable_app_info"
+        android:summary="@string/pref_summary_enable_app_info"
         android:defaultValue="true" />
 </PreferenceScreen>
