@@ -8,6 +8,8 @@ import android.net.http.AndroidHttpClient;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.google.android.gms.common.api.GoogleApiClient;
+
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.json.JSONArray;
@@ -20,6 +22,13 @@ import java.util.Locale;
  * Created by Nnguyen on 10/12/2014.
  */
 public class GeocoderHelper {
+
+    private GoogleApiClient googleApiClient = null;
+    public GeocoderHelper(Context context) {
+        googleApiClient = (new GoogleApiClient.Builder(context))
+                .build();
+    }
+
     private static final AndroidHttpClient ANDROID_HTTP_CLIENT = AndroidHttpClient.newInstance(GeocoderHelper.class.getName());
 
     private boolean running = false;

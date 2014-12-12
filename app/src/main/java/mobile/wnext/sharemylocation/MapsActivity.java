@@ -11,6 +11,8 @@ import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.http.AndroidHttpClient;
 import android.os.AsyncTask;
 import android.os.Looper;
@@ -31,8 +33,11 @@ import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
-import com.google.android.gms.location.LocationClient;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+//import com.google.android.gms.location.LocationClient;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -54,13 +59,14 @@ import java.util.List;
 import java.util.Locale;
 
 public class MapsActivity extends FragmentActivity implements
-        GooglePlayServicesClient.ConnectionCallbacks,
-        GooglePlayServicesClient.OnConnectionFailedListener,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
         GoogleMap.OnMyLocationButtonClickListener,
         GoogleMap.OnMapClickListener,
         GoogleMap.OnIndoorStateChangeListener,
-        LocationListener {
-
+        LocationListener,
+        android.location.LocationListener{
+    ShareMyLocationApp application;
     public static final String TAG = "ShareMyLocation";
     public static final String PREF_SELECTED_INTENT = "SELECTED_INTENT";
     public static final int REQUEST_CODE_SETTING=0;
@@ -71,12 +77,12 @@ public class MapsActivity extends FragmentActivity implements
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private ShareActionProvider mShareActionProvider;
-    private LocationClient mLocationClient;
+    private GoogleApiClient mLocationClient;
     private SharedPreferences sharedPreferences;
     private SettingsActivity.AppSettings appSettings;
     Location mFoundLocation;
     Marker mCurrentLocationMarker;
-
+    Criteria criteria;
     // the location message object which hold the logic to generate the final message
     LocationMessage mMessage;
 
@@ -110,14 +116,21 @@ public class MapsActivity extends FragmentActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, "onCreated");
         super.onCreate(savedInstanceState);
+        application = (ShareMyLocationApp) getApplication();
         setContentView(R.layout.activity_maps);
         currentTryCount = 0;
         lblPreviewText = (TextView) findViewById(R.id.lblPreviewText);
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         appSettings = new SettingsActivity.AppSettings(this);
         mMessage = new LocationMessage(this, (TextView) findViewById(R.id.tvLocation), appSettings);
+        criteria = new Criteria();
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
 
-        mLocationClient = new LocationClient(this, this, this);
+        mLocationClient = new GoogleApiClient.Builder(this)
+                .addApi(LocationServices.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .build();
 
         findLastKnownLocation();
         setUpMapIfNeeded();
@@ -140,12 +153,14 @@ public class MapsActivity extends FragmentActivity implements
         });
 
         // Create ad request.
-        AdRequest adRequest = new AdRequest.Builder()
-                .setLocation(parseLocation(lastKnownLatLng))
-                .build();
+        if(lastKnownLatLng!=null) {
+            AdRequest adRequest = new AdRequest.Builder()
+                    .setLocation(parseLocation(lastKnownLatLng))
+                    .build();
 
-        // Begin loading your interstitial.
-        interstitial.loadAd(adRequest);
+            // Begin loading your interstitial.
+            interstitial.loadAd(adRequest);
+        }
     }
 
     // Invoke displayInterstitial() when you are ready to display an interstitial.
@@ -244,12 +259,24 @@ public class MapsActivity extends FragmentActivity implements
     protected void onStart() {
         super.onStart();
         Log.i(TAG, "onStart");
-        // Connect the client.
 
-        if(mLocationClient!=null)
+        if(mLocationClient!=null && application.isPlayServiceAvailable())
             mLocationClient.connect();
+        else {
+            requestLocationUpdateFromLocationManager();
+        }
     }
 
+    private void requestLocationUpdateFromLocationManager() {
+        if(mlocationManager!=null) {
+            mlocationManager.requestSingleUpdate(
+                    mlocationManager.getBestProvider(criteria, true),
+                    this,
+                    Looper.myLooper());
+
+            Log.i(TAG, "Location request sent via location manager");
+        }
+    }
     /*
      * Called when the Activity is no longer visible.
      */
@@ -257,9 +284,9 @@ public class MapsActivity extends FragmentActivity implements
     protected void onStop() {
         Log.i(TAG, "onStop");
         // Disconnecting the client invalidates it.
-        if (mLocationClient != null) {
+        if (mLocationClient != null)
             mLocationClient.disconnect();
-        }
+
         super.onStop();
     }
 
@@ -280,8 +307,12 @@ public class MapsActivity extends FragmentActivity implements
     protected void onResume() {
         super.onResume();
         Log.i(TAG, "onResume");
-        setUpMapIfNeeded();
-        Log.i(TAG, appSettings.toString());
+
+        if(application.isPlayServiceAvailable())
+            setUpMapIfNeeded();
+        else {
+            // use location manager to get user address
+        }
     }
 
     private void setUpMapIfNeeded() {
@@ -369,9 +400,20 @@ public class MapsActivity extends FragmentActivity implements
     @Override
     public void onConnected(Bundle bundle) {
         Log.i(TAG, "onConnected "+bundle);
-        mLocationClient.requestLocationUpdates(
-                REQUEST,
-                this);  // LocationListener
+        if(mLocationClient.isConnected()) {
+            LocationServices.FusedLocationApi.requestLocationUpdates(
+                    mLocationClient,
+                    REQUEST,
+                    this);
+            /*mLocationClient.requestLocationUpdates(
+                    REQUEST,
+                    this);  // LocationListener*/
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        // do nothing
     }
 
     // Location information come from the device
@@ -383,7 +425,7 @@ public class MapsActivity extends FragmentActivity implements
         Log.i(TAG,"Try Num# "+currentTryCount+++":Device location is changed to: "+location);
         if(currentTryCount > MAX_TRY_GET_ADDRESS_COUNT || mMessage.isFoundUserAddress()) {
             // only try a few times to get the user address then stop
-            mLocationClient.disconnect();
+            //mLocationClient.disconnect();
         }
 
         // update message
@@ -399,10 +441,25 @@ public class MapsActivity extends FragmentActivity implements
             setMarkerLocation(mMessage.getLatLng());
 
             // only search address for location with high accuracy
-            if(appSettings.enableAddress()) {
+            if(appSettings.enableAddress() && isNetworkAvailable()) {
                 (new GetAddressTask(this)).execute(location);
             }
         }
+    }
+
+    @Override
+    public void onStatusChanged(String s, int i, Bundle bundle) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String s) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String s) {
+
     }
 
     private void setMarkerLocation(LatLng latLng) {
@@ -442,17 +499,13 @@ public class MapsActivity extends FragmentActivity implements
     }
 
     @Override
-    public void onDisconnected() {
-        Log.i(TAG,"onDisconnected");
-    }
-
-    @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
         Log.i(TAG,"onConnectionFailed" + connectionResult.toString());
     }
 
     @Override
     public boolean onMyLocationButtonClick() {
+        Log.i(TAG, "onMyLocationButtonClick");
         userSelectedLocation = null;
         mFoundLocation = null;
 
@@ -463,35 +516,10 @@ public class MapsActivity extends FragmentActivity implements
 
         mMessage.setAddress(null);
 
-        if(mlocationManager!=null) {
-            Criteria criteria = new Criteria();
-            criteria.setAccuracy(Criteria.ACCURACY_FINE);
-            mlocationManager.requestSingleUpdate(
-                    mlocationManager.getBestProvider(criteria, true),
-                    new android.location.LocationListener() {
-                        @Override
-                        public void onLocationChanged(Location location) {
-                            theThis.onLocationChanged(location);
-                        }
 
-                        @Override
-                        public void onStatusChanged(String s, int i, Bundle bundle) {
+        requestLocationUpdateFromLocationManager();
 
-                        }
-
-                        @Override
-                        public void onProviderEnabled(String s) {
-
-                        }
-
-                        @Override
-                        public void onProviderDisabled(String s) {
-
-                        }
-                    },
-                    Looper.myLooper());
-        }
-        return false;
+        return false; // this cause the default behavior to occur
     }
 
     @Override
@@ -511,7 +539,7 @@ public class MapsActivity extends FragmentActivity implements
         mMap.animateCamera(cameraUpdate);
 
         // request revert geocode to find address
-        if(appSettings.enableAddress()) {
+        if(appSettings.enableAddress() && isNetworkAvailable()) {
             (new GetAddressTask(this)).execute(parseLocation(latLng));
         }
     }
@@ -682,5 +710,10 @@ public class MapsActivity extends FragmentActivity implements
     private LatLng parseLatLng(final Location location) {
         return new LatLng(location.getLatitude(),location.getLongitude());
     }
-
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
 }
