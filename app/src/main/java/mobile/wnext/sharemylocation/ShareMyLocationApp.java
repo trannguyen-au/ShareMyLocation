@@ -11,8 +11,8 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 public class ShareMyLocationApp extends Application {
 
     public boolean isPlayServiceAvailable() {
-        return false;
-        /*int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
-        return status != ConnectionResult.SUCCESS;*/
+        //return false;
+        int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+        return status != ConnectionResult.SUCCESS;
     }
 }
