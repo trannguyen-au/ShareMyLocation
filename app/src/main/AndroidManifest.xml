@@ -54,6 +54,23 @@
         <activity android:name="com.google.android.gms.ads.AdActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"
             android:theme="@android:style/Theme.Translucent" />
-    </application>
 
+        <receiver android:name="mobile.wnext.sharemylocation.widget.LocationWidgetProvider" >
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                       android:resource="@xml/widget" />
+        </receiver>
+
+        <!-- The service serving the RemoteViews to the collection widget ->
+        <service android:name="WeatherWidgetService"
+                 android:permission="android.permission.BIND_REMOTEVIEWS"
+                 android:exported="false" />
+
+        <!- The content provider serving the (fake) weather data
+        <provider android:name="WeatherDataProvider"
+                  android:authorities="com.example.android.weatherlistwidget.provider" />-->
+
+    </application>
 </manifest>
