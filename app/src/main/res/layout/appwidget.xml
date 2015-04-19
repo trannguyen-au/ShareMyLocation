@@ -1,7 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:orientation="vertical"
               android:layout_width="match_parent"
-              android:layout_height="match_parent">
+              android:layout_height="match_parent"
+    android:background="@drawable/background_widget">
 
-</LinearLayout>
+            <TextView
+                android:layout_width="74dp"
+                android:layout_height="15dp"
+                android:text="LAT: 0"
+                android:id="@+id/tvWidgetLat"
+                android:textSize="7dp"
+                android:gravity="center"
+                android:textColor="#ff000066"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentRight="true"
+                android:layout_marginTop="5dp" />
+
+            <TextView
+                android:layout_width="74dp"
+                android:layout_height="20dp"
+                android:text="LNG: 0"
+                android:id="@+id/tvWidgetLng"
+                android:textSize="7dp"
+                android:gravity="center"
+                android:textColor="#ff000066"
+                android:layout_below="@+id/tvWidgetLat"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentRight="true" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="false"
+        android:layout_alignParentStart="false"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true">
+
+        <ImageButton
+            style="@style/WidgetButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="20dp"
+            android:id="@+id/btnRefresh"
+            android:src="@drawable/ic_action_refresh"
+            android:textSize="10dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:layout_width="0dp"
+            android:layout_height="20dp"
+            android:id="@+id/btnShareLocation"
+            android:src="@drawable/ic_action_send_now"
+            style="@style/WidgetButtonStyle"
+            android:textSize="10dp"
+            android:layout_weight="1" />
+    </LinearLayout>
+
+</RelativeLayout>
