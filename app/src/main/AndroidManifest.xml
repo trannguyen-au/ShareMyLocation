@@ -60,6 +60,7 @@
             <intent-filter>
                 <action android:name="mobile.wnext.sharemylocation.intent.action.SEND_MESSAGE" />
                 <action android:name="mobile.wnext.sharemylocation.intent.action.REFRESH_LOCATION" />
+                <action android:name="mobile.wnext.sharemylocation.intent.action.STOP_REFRESHING" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
                        android:resource="@xml/widget_provider" />

@@ -18,6 +18,7 @@ import mobile.wnext.sharemylocation.R;
  */
 public class LocationWidgetProvider extends AppWidgetProvider  {
 
+
     @Override
     public void onUpdate(Context context, AppWidgetManager manager,int[] appWidgetIds) {
         Log.i(AppConstants.TAG, "Location widget provider updating...");

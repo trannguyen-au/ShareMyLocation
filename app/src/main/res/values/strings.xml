@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name" translatable="false">Share My Location</string>
+    <string name="app_name">Share My Location</string>
     <string name="title_activity_maps">Share My Location</string>
     <string name="title_activity_about">About Share My Location App</string>
     <string name="clipboard_message_label" translatable="false">clipboard_message_label</string>
@@ -44,6 +44,11 @@
     <string name="str_preview_message">Preview message:</string>
     <string name="str_searching_for_your_location">Searching for your location…</string>
 
+    <string name="accuracy_">Accuracy: </string>
+    <string name="lat_" translatable="false">LAT: </string>
+    <string name="lon_" translatable="false">LON: </string>
+    <string name="refresh_the_location_first">Please refresh the location first to determine your location</string>
+    <string name="detecting_your_location">Detecting your location…</string>
     <string-array name="map_type_list">
         <item>Street Map</item>
         <item>Earth</item>

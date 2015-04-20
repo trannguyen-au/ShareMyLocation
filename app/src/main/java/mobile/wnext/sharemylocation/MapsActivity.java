@@ -207,26 +207,36 @@ public class MapsActivity extends FragmentActivity implements
     }
 
     private void findLastKnownLocation() {
-        mlocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        if(mlocationManager!=null) {
-            Location lastKnownLocation = mlocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        // last known location can come from the widget
+        Intent callingIntent = getIntent();
+        if (callingIntent.hasExtra(AppConstants.EXTRA_LOCATION)) {
+            Location lastKnownLocation = callingIntent.getParcelableExtra(AppConstants.EXTRA_LOCATION);
+            lastKnownLatLng = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
+            Log.i(TAG, "Last known location from Widget: " + lastKnownLocation);
 
-            if (lastKnownLocation != null)
-                Log.i(TAG, "Last known location from GPS provider: " + lastKnownLocation);
+            // trigger the share action
+        } else {
+            mlocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+            if (mlocationManager != null) {
+                Location lastKnownLocation = mlocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
-            if (lastKnownLocation == null) {
-                lastKnownLocation = mlocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                Log.i(TAG, "Last known location from Network: " + lastKnownLocation);
-            }
-            if (lastKnownLocation == null) {
-                lastKnownLocation = mlocationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
-                Log.i(TAG, "Last known location from Network: " + lastKnownLocation);
-            }
+                if (lastKnownLocation != null)
+                    Log.i(TAG, "Last known location from GPS provider: " + lastKnownLocation);
 
-            if (lastKnownLocation != null) {
-                lastKnownLatLng = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
-            } else {
-                Log.i(TAG, "Not found Last known location");
+                if (lastKnownLocation == null) {
+                    lastKnownLocation = mlocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                    Log.i(TAG, "Last known location from Network: " + lastKnownLocation);
+                }
+                if (lastKnownLocation == null) {
+                    lastKnownLocation = mlocationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+                    Log.i(TAG, "Last known location from Network: " + lastKnownLocation);
+                }
+
+                if (lastKnownLocation != null) {
+                    lastKnownLatLng = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
+                } else {
+                    Log.i(TAG, "Not found Last known location");
+                }
             }
         }
     }

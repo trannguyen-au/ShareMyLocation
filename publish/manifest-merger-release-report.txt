@@ -111,6 +111,44 @@ ADDED from AndroidManifest.xml:54:9
 		ADDED from AndroidManifest.xml:56:13
 	android:name
 		ADDED from AndroidManifest.xml:54:19
+receiver#mobile.wnext.sharemylocation.widget.LocationWidgetIntentReceiver
+ADDED from AndroidManifest.xml:58:9
+	android:label
+		ADDED from AndroidManifest.xml:59:13
+	android:name
+		ADDED from AndroidManifest.xml:58:19
+intent-filter#mobile.wnext.sharemylocation.intent.action.REFRESH_LOCATION+mobile.wnext.sharemylocation.intent.action.SEND_MESSAGE+mobile.wnext.sharemylocation.intent.action.STOP_REFRESHING
+ADDED from AndroidManifest.xml:60:13
+action#mobile.wnext.sharemylocation.intent.action.SEND_MESSAGE
+ADDED from AndroidManifest.xml:61:17
+	android:name
+		ADDED from AndroidManifest.xml:61:25
+action#mobile.wnext.sharemylocation.intent.action.REFRESH_LOCATION
+ADDED from AndroidManifest.xml:62:17
+	android:name
+		ADDED from AndroidManifest.xml:62:25
+action#mobile.wnext.sharemylocation.intent.action.STOP_REFRESHING
+ADDED from AndroidManifest.xml:63:17
+	android:name
+		ADDED from AndroidManifest.xml:63:25
+meta-data#android.appwidget.provider
+ADDED from AndroidManifest.xml:65:13
+	android:resource
+		ADDED from AndroidManifest.xml:66:24
+	android:name
+		ADDED from AndroidManifest.xml:65:24
+receiver#mobile.wnext.sharemylocation.widget.LocationWidgetProvider
+ADDED from AndroidManifest.xml:69:9
+	android:label
+		ADDED from AndroidManifest.xml:70:13
+	android:name
+		ADDED from AndroidManifest.xml:69:19
+intent-filter#android.appwidget.action.APPWIDGET_UPDATE
+ADDED from AndroidManifest.xml:71:13
+action#android.appwidget.action.APPWIDGET_UPDATE
+ADDED from AndroidManifest.xml:72:17
+	android:name
+		ADDED from AndroidManifest.xml:72:25
 uses-sdk
 INJECTED from AndroidManifest.xml:0:0 reason: use-sdk injection requested
 MERGED from com.google.android.gms:play-services:6.5.87:18:5

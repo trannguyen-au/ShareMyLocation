@@ -31,4 +31,8 @@
         <item>Đường phố</item>
         <item>Vệ Tinh</item>
     </string-array>
+    <string name="refresh_the_location_first">Hãy xác định địa điểm của bạn trước khi chia sẽ</string>
+    <string name="accuracy_">Sai lệch:</string>
+    <string name="app_name">Chia sẻ địa điểm</string>
+    <string name="detecting_your_location">Đang xác định địa điểm của bạn…</string>
 </resources>

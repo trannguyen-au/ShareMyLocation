@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.location.Address;
+import android.location.Location;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.model.IndoorBuilding;
@@ -46,6 +47,10 @@ public class LocationMessage {
 
         messageIntent = new Intent(Intent.ACTION_SEND);
         messageIntent.setType("text/plain");
+    }
+
+    public LocationMessage(Context context, SettingsActivity.AppSettings appSettings) {
+        this(context, null, appSettings);
     }
 
     @Override
